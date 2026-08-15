@@ -121,11 +121,15 @@
 .mmJobBar { height: 4px; border-radius: 2px; background: var(--dsw-alias-bg-layer-3); margin-top: 6px; overflow: hidden; }
 .mmJobBarFill { height: 100%; background: var(--dsw-alias-brand-primary); border-radius: 2px; transition: width .3s; }
 
-.mmBadge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-.mmBadgeOk { background: var(--dsw-alias-state-success-secondary); color: var(--dsw-alias-state-success-primary); }
-.mmBadgeErr { background: var(--dsw-alias-state-error-secondary); color: var(--dsw-alias-state-error-primary); }
-.mmBadgeWarn { background: var(--dsw-alias-state-warn-secondary); color: var(--dsw-alias-state-warn-primary); }
-.mmBadgeInfo { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
+.mmBadge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid transparent; }
+/* 状态徽章对比度修复（2026-08-15）：secondary 底+primary 字 ≈1.17:1 不达标，
+   对齐 harness 内置范式——tertiary(浅 tint) 底 + primary(深 shade) 字；
+   secondary 归位为边框（kimi k3 UI 评审 + WCAG 4.5:1）。 */
+.mmBadgeOk { background: var(--dsw-alias-state-success-tertiary); color: var(--dsw-alias-state-success-primary); border-color: var(--dsw-alias-state-success-secondary); }
+/* error 无 tertiary 令牌：用 color-mix 淡红底（ui-trajectory 同款范式） */
+.mmBadgeErr { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, var(--dsw-alias-bg-layer-1)); color: var(--dsw-alias-state-error-primary); }
+.mmBadgeWarn { background: var(--dsw-alias-state-warn-tertiary); color: var(--dsw-alias-state-warn-primary); border-color: var(--dsw-alias-state-warn-secondary); }
+.mmBadgeInfo { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); border-color: var(--dsw-alias-border-l2); }
 
 /* ── 作品库 ── */
 .mmGrid {
