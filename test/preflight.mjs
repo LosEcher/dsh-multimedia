@@ -7,11 +7,13 @@
  * Run: node test/preflight.mjs   （在改 index.mjs / lib/tools.mjs 后必跑）
  */
 import { createRequire } from 'node:module'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { existsSync } from 'node:fs'
 import { createToolDefs } from '../lib/tools.mjs'
 
-const PROFILE = process.env.DSH_PROFILE ?? '/Users/echerlos/.dsh/profiles/web'
+const PROFILE = process.env.DSH_PROFILE ?? join(homedir(), '.dsh/profiles/web')
 const ANCHOR = `${PROFILE}/`
 
 if (!existsSync(`${PROFILE}/node_modules`)) {
