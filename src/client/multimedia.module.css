@@ -98,12 +98,14 @@
 }
 .mmBtnPrimary:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover); }
 
-.mmBtnDanger { color: var(--dsw-alias-state-error-primary); border-color: var(--dsw-alias-state-error-secondary); }
+.mmBtnDanger { color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 70%, var(--dsw-alias-label-primary)); border-color: var(--dsw-alias-state-error-secondary); }
 .mmBtnDanger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }
 
 .mmHint { font-size: 12px; color: var(--dsw-alias-label-tertiary); }
-.mmError { font-size: 12px; color: var(--dsw-alias-state-error-primary); margin-top: 6px; }
-.mmOk { font-size: 12px; color: var(--dsw-alias-state-success-primary); margin-top: 6px; }
+/* 状态文字对比度（2026-08-15 P0 补漏）：primary 作纯文字在浅色主题只有 2.2:1
+   （success/warn），统一 color-mix 向 label-primary 混深/混亮（双主题自适应 5.5-10.9:1）。 */
+.mmError { font-size: 12px; color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 55%, var(--dsw-alias-label-primary)); margin-top: 6px; }
+.mmOk { font-size: 12px; color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 55%, var(--dsw-alias-label-primary)); margin-top: 6px; }
 
 /* ── 任务条 ── */
 .mmJobStrip { display: flex; flex-direction: column; gap: 8px; }
@@ -215,7 +217,7 @@
 .mmSwitch input:checked ~ .mmSwitchThumb { transform: translateX(15px); }
 
 .mmKeyTag { font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
-.mmKeyTagMissing { color: var(--dsw-alias-state-warn-primary); background: var(--dsw-alias-state-warn-secondary); }
+.mmKeyTagMissing { color: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 55%, var(--dsw-alias-label-primary)); background: var(--dsw-alias-state-warn-tertiary); border: 1px solid var(--dsw-alias-state-warn-secondary); }
 
 /* ── 内联样式迁移（类化） ── */
 /* 行内修饰：顶部对齐 / 紧凑 / 无间距 / 大间距 */
