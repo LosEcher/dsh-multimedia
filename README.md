@@ -36,6 +36,15 @@ API Key 策略：`apiKeyEnv`（环境变量）优先，其次页面输入的 `ap
 | `elevenlabs` | TTS / 文生图 | `xi-api-key` | 同步 TTS；图片走异步 Flows（免费层 10k credits/月） |
 | `comfyui` | 文生图 / 视频（工作流 JSON） | 无 | 本地 `127.0.0.1:8188`，需自备工作流 |
 | `xai` | 文生图 / 图生图（编辑）/ 文生视频 / 视频编辑 / 视频扩展 | `Bearer <XAI_API_KEY>` | OpenAI 兼容 `https://api.x.ai/v1`；图片同步返回、视频异步轮询（request_id → done） |
+| `zenmux` | 文生图 / 图生图（编辑）/ 图生视频 / 文生视频 / TTS | `Bearer <ZENMUX_API_KEY>` | OpenAI 兼容聚合网关 `https://zenmux.ai/api/v1`；图片/TTS 同步（b64），视频原生异步协议（`/videos` 提交 → 轮询） |
+
+> ZenMux 渠道（2026-08-15 新增）：模型 slug 用「供应商/模型名」格式——
+> 图片 `openai/gpt-image-2`（GPT 模型总是返回 b64）、视频
+> `bytedance/doubao-seedance-2.0`（原生协议，480p–1080p，支持图生视频
+> `params.image` → first_frame，可返回 last_frame 图）、TTS
+> `google/gemini-3.1-flash-tts-preview`（默认 PCM，自动封装为 WAV 便于播放）。
+> Key 在 https://zenmux.ai/platform/pay-as-you-go 充值并创建（PAYG 按量付费）。
+> 更多模型 slug 见 https://zenmux.ai/models。
 
 > xAI（Grok Imagine）渠道：模型 `grok-imagine-image-2.0`（图片生成/编辑）、
 > `grok-imagine-video-1.5`（视频生成/编辑/扩展）。渠道页面可生成/编辑图片、

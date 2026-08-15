@@ -75,3 +75,15 @@
             apiKeyEnv: XAI_API_KEY
             apiKey: ''
             baseUrl: 'https://api.x.ai/v1'
+          # ZenMux：OpenAI 兼容聚合网关。图片（GPT Image 2，同步 b64）+ 视频
+          # （原生异步协议 /videos，Seedance 2.0，支持图生视频 params.image）+ TTS
+          # （Gemini Flash TTS，PCM 自动封装为 WAV）。需 ZENMUX_API_KEY
+          # （https://zenmux.ai/platform/pay-as-you-go 充值并创建 Key）。
+          # 更多模型 slug 见 https://zenmux.ai/models（「供应商/模型名」格式）。
+          - id: zenmux
+            type: zenmux
+            label: ZenMux
+            enabled: false
+            apiKeyEnv: ZENMUX_API_KEY
+            apiKey: ''
+            baseUrl: 'https://zenmux.ai/api/v1'

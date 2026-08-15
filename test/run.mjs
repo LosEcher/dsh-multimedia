@@ -337,6 +337,116 @@ console.log('— xai adapter (fake fetch) —')
   }
 }
 
+console.log('— zenmux adapter (fake fetch) —')
+{
+  const base = 'https://zenmux.ai/api/v1'
+  const ZM_KEY = 'zm-test-key'
+  const zmChannel = { id: 'zenmux', type: 'zenmux', label: 'ZenMux', enabled: true, apiKeyEnv: '', apiKey: ZM_KEY, baseUrl: base }
+  const routes = new Map()
+  const seqFetch = async (url, init) => {
+    const key = `${init?.method ?? 'GET'} ${url}`
+    const hit = routes.get(key)
+    if (Array.isArray(hit)) {
+      if (!hit.length) throw new Error(`unmocked: ${key}`)
+      routes.set(key, hit.slice(1))
+      return hit[0]
+    }
+    if (!hit) throw new Error(`unmocked: ${key}`)
+    if (init?.body) hit._body = String(init.body)
+    return hit
+  }
+  const adapters = createAdapters({ fetchImpl: seqFetch, sleep: async () => {} })
+  const api = {
+    channelKey: () => ZM_KEY,
+    progress: () => {},
+    saveOutput: async (j, o) => { const out = { ...o, idx: j.outputs.length, localFile: `/tmp/zm${j.outputs.length}`, fileUrl: '/f', mime: o.mime ?? '', size: o.data ? o.data.length : 10, sizeLabel: '10 B' }; j.outputs.push(out); return out },
+  }
+  const res = (json) => ({ ok: true, status: 200, headers: { get: () => '' }, json: async () => json })
+
+  // zenmux image generate（同步 b64_json，GPT 模型总是 base64）
+  {
+    const imgRoute = res({ data: [{ b64_json: 'aGVsbG8=', revised_prompt: 'x' }], usage: { total_tokens: 5 } })
+    routes.set(`POST ${base}/images/generations`, imgRoute)
+    const job = createJob({ channelId: 'zenmux', modality: 'image', prompt: 'a cat', params: { num_images: 2, size: '1536x1024', quality: 'high' }, model: '' })
+    const result = await adapters.zenmux.generate(zmChannel, job, api)
+    ok('zenmux image generate outputs 1 image', result.outputs.length === 1 && result.outputs[0].kind === 'image')
+    ok('zenmux image body has model+prompt+n+size', (imgRoute._body ?? '').includes('openai/gpt-image-2') && (imgRoute._body ?? '').includes('a cat') && (imgRoute._body ?? '').includes('"n":2') && (imgRoute._body ?? '').includes('1536x1024'))
+    ok('zenmux image meta usage captured', result.meta.usage?.total_tokens === 5)
+  }
+
+  // zenmux image edit（JSON 模式 images[].image_url）
+  {
+    const editRoute = res({ data: [{ b64_json: 'ZWRpdA==' }] })
+    routes.set(`POST ${base}/images/edits`, editRoute)
+    const job = createJob({ channelId: 'zenmux', modality: 'image', prompt: 'make it a sketch', params: { action: 'edit', image: 'https://example.com/in.png' }, model: 'openai/gpt-image-2' })
+    const result = await adapters.zenmux.generate(zmChannel, job, api)
+    ok('zenmux image edit hits /images/edits', result.outputs.length === 1)
+    ok('zenmux image edit body carries images[].image_url', (editRoute._body ?? '').includes('https://example.com/in.png') && (editRoute._body ?? '').includes('"images"'))
+  }
+
+  // zenmux video generate（异步：submit → poll queued → succeeded + video_url + last_frame）
+  {
+    routes.set(`POST ${base}/videos`, res({ id: 'job-1', status: 'queued' }))
+    routes.set(`GET ${base}/videos/job-1`, [
+      res({ id: 'job-1', status: 'running', model: 'bytedance/doubao-seedance-2.0' }),
+      res({ id: 'job-1', status: 'succeeded', model: 'bytedance/doubao-seedance-2.0', content: { video_url: 'https://video.zenmux.ai/out.mp4', last_frame_url: 'https://img.zenmux.ai/frame.jpg' } }),
+    ])
+    const job = createJob({ channelId: 'zenmux', modality: 'video', prompt: 'lake at sunrise', params: { duration: 5, ratio: '16:9', image: 'https://example.com/first.png' }, model: '' })
+    const result = await adapters.zenmux.generate(zmChannel, job, api)
+    ok('zenmux video generate polls to succeeded', result.outputs.length === 2 && result.outputs[0].kind === 'video' && result.outputs[1].kind === 'image')
+    ok('zenmux video meta providerJobId', result.meta.providerJobId === 'job-1')
+  }
+
+  // zenmux video submit body：content 含 text + image_url first_frame
+  {
+    const submitRoute = res({ id: 'job-2', status: 'queued' })
+    routes.set(`POST ${base}/videos`, submitRoute)
+    routes.set(`GET ${base}/videos/job-2`, res({ id: 'job-2', status: 'succeeded', content: { video_url: 'https://video.zenmux.ai/out2.mp4' } }))
+    const job = createJob({ channelId: 'zenmux', modality: 'video', prompt: 'waves', params: { image: 'data:image/png;base64,AAAA' }, model: 'bytedance/doubao-seedance-2.0' })
+    const result = await adapters.zenmux.generate(zmChannel, job, api)
+    ok('zenmux video image-to-video works', result.outputs.length === 1 && result.outputs[0].kind === 'video')
+    ok('zenmux video body has content text + image_url first_frame', (submitRoute._body ?? '').includes('"type":"text"') && (submitRoute._body ?? '').includes('"type":"image_url"') && (submitRoute._body ?? '').includes('first_frame'))
+  }
+
+  // zenmux tts：PCM (audio/L16) 自动封装为 WAV
+  {
+    const ttsRoute = res({ model: 'google/gemini-3.1-flash-tts-preview', audio: Buffer.from('RIFFTEST').toString('base64'), mime_type: 'audio/L16;rate=24000', usage: { total_tokens: 3 } })
+    routes.set(`POST ${base}/audio/speech`, ttsRoute)
+    const job = createJob({ channelId: 'zenmux', modality: 'tts', prompt: 'hello', params: { voice: 'Puck' }, model: '' })
+    const result = await adapters.zenmux.generate(zmChannel, job, api)
+    ok('zenmux tts outputs audio', result.outputs.length === 1 && result.outputs[0].kind === 'audio' && result.outputs[0].mime === 'audio/wav')
+    ok('zenmux tts wav header (RIFF)', Buffer.isBuffer(result.outputs[0].data) && result.outputs[0].data.subarray(0, 4).toString() === 'RIFF')
+    ok('zenmux tts body has model+input+voice', (ttsRoute._body ?? '').includes('gemini-3.1-flash-tts-preview') && (ttsRoute._body ?? '').includes('hello') && (ttsRoute._body ?? '').includes('Puck'))
+  }
+
+  // zenmux tts 非 PCM（audio/mpeg）直接以 dataUri 保存
+  {
+    const ttsRoute2 = res({ audio: 'bXAz', mime_type: 'audio/mpeg', usage: { total_tokens: 2 } })
+    routes.set(`POST ${base}/audio/speech`, ttsRoute2)
+    const job = createJob({ channelId: 'zenmux', modality: 'tts', prompt: 'hi', params: { response_format: 'mp3' }, model: '' })
+    const result = await adapters.zenmux.generate(zmChannel, job, api)
+    ok('zenmux tts mp3 keeps mime', result.outputs.length === 1 && result.outputs[0].mime === 'audio/mpeg' && result.outputs[0].dataUri.startsWith('data:audio/mpeg'))
+  }
+
+  // zenmux resume：复用 providerJobId 继续轮询视频
+  {
+    routes.set(`GET ${base}/videos/job-1`, [
+      res({ id: 'job-1', status: 'succeeded', content: { video_url: 'https://video.zenmux.ai/resume.mp4' } }),
+    ])
+    const job = createJob({ channelId: 'zenmux', modality: 'video', prompt: '', params: {}, model: '' })
+    job.meta = { providerJobId: 'job-1' }
+    const result = await adapters.zenmux.resume(zmChannel, job, api)
+    ok('zenmux resume returns output', result.outputs.length === 1 && result.outputs[0].kind === 'video')
+    ok('zenmux image resume rejects', adapters.zenmux.resume(zmChannel, { ...job, modality: 'image' }, api).then(() => false, () => true))
+  }
+
+  // zenmux test：无 key 时给出明确提示
+  {
+    const noKey = await adapters.zenmux.test({ ...zmChannel, apiKey: '', apiKeyEnv: 'ZENMUX_API_KEY' })
+    ok('zenmux test without key reports missing key', noKey.ok === false && noKey.message.includes('ZENMUX_API_KEY'))
+  }
+}
+
 rmSync(DATA, { recursive: true, force: true })
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

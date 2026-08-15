@@ -41,6 +41,7 @@ const CAPABILITY: Record<string, Modality[]> = {
   googletts: ['tts'],
   cloudflare: ['image', 'tts'],
   xai: ['image', 'video'],
+  zenmux: ['image', 'video', 'tts'],
 }
 
 /** 无需 API Key 的渠道类型（免费/本地），不显示「未配置 Key」提示。 */
