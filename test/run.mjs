@@ -131,6 +131,43 @@ console.log('— adapters (fake fetch) —')
     ok('elevenlabs flows image', result.outputs.length === 1 && result.meta.providerJobId === 'flow-1' && result.outputs[0].url.includes('storage.elevenlabs.io'))
   }
 
+  // googletts: GET translate_tts → mp3 bytes
+  {
+    routes.set('GET https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN&q=hello', {
+      ok: true, status: 200, headers: { get: () => 'audio/mpeg' },
+      arrayBuffer: async () => Buffer.from('MP3DATA'),
+    })
+    const job = createJob({ channelId: 'gt', modality: 'tts', prompt: 'hello', params: {} })
+    const api = { channelKey: () => '', progress: () => {}, saveOutput: async (j, o) => { const out = { ...o, idx: 0, localFile: '/tmp/g.mp3', fileUrl: '/f', mime: o.mime, size: 7, sizeLabel: '7 B' }; j.outputs.push(out); return out } }
+    const result = await adapters.googletts.generate({ id: 'gt', type: 'googletts', baseUrl: 'https://translate.google.com' }, job, api)
+    ok('googletts mp3', result.outputs.length === 1 && result.outputs[0].kind === 'audio' && result.meta.lang === 'zh-CN')
+  }
+
+  // pollinations image: GET prompt → jpeg bytes
+  {
+    routes.set('GET https://image.pollinations.ai/prompt/a%20cat?width=1024&height=1024&model=flux&seed=1&nologo=true&private=true', {
+      ok: true, status: 200, headers: { get: () => 'image/jpeg' },
+      arrayBuffer: async () => Buffer.from('JPEGDATA'),
+    })
+    routes.set('GET https://image.pollinations.ai/models', { ok: true, status: 200, headers: { get: () => '' }, json: async () => ({ models: ['flux'] }) })
+    const job = createJob({ channelId: 'polli', modality: 'image', prompt: 'a cat', params: { seed: 1 }, model: 'flux' })
+    const api = { channelKey: () => '', progress: () => {}, saveOutput: async (j, o) => { const out = { ...o, idx: 0, localFile: '/tmp/p.jpg', fileUrl: '/f', mime: o.mime, size: 9, sizeLabel: '9 B' }; j.outputs.push(out); return out } }
+    const result = await adapters.pollinations.generate({ id: 'polli', type: 'pollinations', baseUrl: 'https://image.pollinations.ai' }, job, api)
+    ok('pollinations image jpeg', result.outputs.length === 1 && result.outputs[0].mime === 'image/jpeg' && result.meta.seed === '1')
+  }
+
+  // streamelements tts: GET speech → mp3 bytes
+  {
+    routes.set('GET https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=hello', {
+      ok: true, status: 200, headers: { get: () => 'audio/mpeg' },
+      arrayBuffer: async () => Buffer.from('MP3DATA'),
+    })
+    const job = createJob({ channelId: 'se', modality: 'tts', prompt: 'hello', params: {} })
+    const api = { channelKey: () => '', progress: () => {}, saveOutput: async (j, o) => { const out = { ...o, idx: 0, localFile: '/tmp/s.mp3', fileUrl: '/f', mime: o.mime, size: 7, sizeLabel: '7 B' }; j.outputs.push(out); return out } }
+    const result = await adapters.streamelements.generate({ id: 'se', type: 'streamelements', baseUrl: 'https://api.streamelements.com' }, job, api)
+    ok('streamelements tts mp3', result.outputs.length === 1 && result.outputs[0].kind === 'audio' && result.meta.voice === 'Brian')
+  }
+
   // fal queue: submit → IN_QUEUE → COMPLETED → result
   {
     const falChannel = { ...channel, id: 'fal', type: 'fal', baseUrl: 'https://queue.fal.run' }

@@ -16,7 +16,7 @@ import { homedir } from 'node:os'
 import { mkdirSync, writeFileSync, renameSync, existsSync, copyFileSync, readdirSync, statSync, createReadStream } from 'node:fs'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import {
-  ChannelStore, JobStore, createJob, channelKey, maskChannel,
+  ChannelStore, JobStore, createJob, channelKey, maskChannel, needsKey,
   expandHome, extForMime, sizeLabel,
 } from './lib/core.mjs'
 import { createToolDefs } from './lib/tools.mjs'
@@ -125,7 +125,7 @@ export function apply(ctx, rawConfig = {}) {
       if (!channel) throw new Error(`渠道不存在：${job.channelId}`)
       if (!channel.enabled) throw new Error(`渠道已停用：${channel.label}`)
       const key = channelKey(channel)
-      if (!key && channel.type !== 'comfyui') throw new Error(`渠道 ${channel.label} 未配置 API Key（env ${channel.apiKeyEnv || '(字面量)'}）`)
+      if (needsKey(channel) && !key) throw new Error(`渠道 ${channel.label} 未配置 API Key（env ${channel.apiKeyEnv || '(字面量)'}）`)
       jobs.update(job.id, { status: 'running', note: '连接渠道…' })
       const adapter = adapters[channel.type]
       if (!adapter) throw new Error(`未知渠道类型：${channel.type}`)
@@ -246,7 +246,7 @@ export function apply(ctx, rawConfig = {}) {
           const modality = String(body.modality ?? 'image')
           const adapter = adapters[channel.type]
           if (!adapter?.modalities?.includes(modality)) return sendJson(res, 400, { error: `渠道 ${channel.label} 不支持 ${modality}` })
-          if (!channelKey(channel) && channel.type !== 'comfyui') return sendJson(res, 400, { error: `渠道 ${channel.label} 未配置 API Key` })
+          if (needsKey(channel) && !channelKey(channel)) return sendJson(res, 400, { error: `渠道 ${channel.label} 未配置 API Key` })
           const job = createJob({ channelId: channel.id, modality, prompt: body.prompt ?? '', params: body.params ?? {}, model: body.model ?? '', channelLabel: channel.label })
           jobs.add(job)
           dispatch()

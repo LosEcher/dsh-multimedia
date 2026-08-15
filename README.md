@@ -29,9 +29,16 @@ API Key 策略：`apiKeyEnv`（环境变量）优先，其次页面输入的 `ap
 
 | type | 能力 | 认证 | 说明 |
 |---|---|---|---|
+| `pollinations` | 文生图 | **免费无 Key** | 匿名免费（限 1 并发/5s），FLUX/Turbo 等 |
+| `googletts` | TTS | **免费无 Key** | Google Translate TTS，中英日韩等，≤200 字符/次 |
+| `cloudflare` | 文生图 / TTS | CF_API_TOKEN（免费层 10k neurons/天） | Workers AI：FLUX.1 Schnell + MeloTTS，需 accountId |
 | `fal` | 文生图 / 文生视频 / TTS | `Authorization: Key <FAL_KEY>` | queue API，异步任务+轮询 |
-| `elevenlabs` | TTS / 文生图 | `xi-api-key` | 同步接口，TTS 返回音频流 |
+| `elevenlabs` | TTS / 文生图 | `xi-api-key` | 同步 TTS；图片走异步 Flows（免费层 10k credits/月） |
 | `comfyui` | 文生图 / 视频（工作流 JSON） | 无 | 本地 `127.0.0.1:8188`，需自备工作流 |
+
+> 免费验证路径（2026-08-15 实测全通）：Pollinations 文生图 + Google TTS 语音，
+> 零注册零 Key；Cloudflare/ElevenLabs 免费层需注册。视频生成暂无免费 API，
+> 可选智谱 CogVideoX / MiniMax / 即梦（每日 66 积分）或本地 ComfyUI。
 
 ## HTTP API（同源 `/multimedia`）
 

@@ -36,7 +36,14 @@ const CAPABILITY: Record<string, Modality[]> = {
   fal: ['image', 'video', 'tts'],
   elevenlabs: ['tts', 'image'],
   comfyui: ['image', 'video'],
+  pollinations: ['image'],
+  streamelements: ['tts'],
+  googletts: ['tts'],
+  cloudflare: ['image', 'tts'],
 }
+
+/** 无需 API Key 的渠道类型（免费/本地），不显示「未配置 Key」提示。 */
+const NO_KEY_TYPES = ['comfyui', 'pollinations', 'streamelements', 'googletts']
 
 const IMAGE_SIZES = [
   { id: 'square_hd', label: '方形 1024×1024' },
@@ -234,6 +241,7 @@ export function MultimediaTab(_props: ConvViewProps) {
     if (f.baseUrl && f.baseUrl !== channels.find((c) => c.id === id)?.baseUrl) patch.baseUrl = f.baseUrl
     if (f.apiKey) patch.apiKey = f.apiKey
     if (f.voice !== undefined) patch.voice = f.voice
+    if (f.accountId !== undefined && f.accountId !== channels.find((c) => c.id === id)?.extra?.accountId) patch.extra = { accountId: f.accountId }
     if (!Object.keys(patch).length) { notify('没有需要保存的改动'); return }
     try {
       await api('/multimedia/channels', { method: 'PUT', body: JSON.stringify({ id, patch }) })
@@ -333,7 +341,7 @@ export function MultimediaTab(_props: ConvViewProps) {
             </select>
           </>
         )}
-        {activeChannel && !activeChannel.hasKey && activeChannel.type !== 'comfyui' && (
+        {activeChannel && !activeChannel.hasKey && !NO_KEY_TYPES.includes(activeChannel.type) && (
           <span className={`${styles.mmBadge} ${styles.mmBadgeErr}`}>未配置 API Key</span>
         )}
       </div>
@@ -485,7 +493,7 @@ export function MultimediaTab(_props: ConvViewProps) {
       <h3 className={styles.mmTitle}>渠道设置</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {channels.map((c) => {
-          const form = channelForms[c.id] ?? { baseUrl: c.baseUrl, apiKey: '', voice: c.voice }
+          const form = channelForms[c.id] ?? { baseUrl: c.baseUrl, apiKey: '', voice: c.voice, accountId: c.extra?.accountId ?? '' }
           return (
             <div key={c.id} className={`${styles.mmCard} ${styles.mmChannelCard}`}>
               <div className={styles.mmChannelHead}>
@@ -515,6 +523,12 @@ export function MultimediaTab(_props: ConvViewProps) {
                   <>
                     <span className={styles.mmRowLabel}>默认音色</span>
                     <input className={styles.mmInput} style={{ width: 200 }} placeholder="voice_id" value={form.voice} onChange={(e) => setChannelForms((m) => ({ ...m, [c.id]: { ...form, voice: e.target.value } }))} />
+                  </>
+                )}
+                {c.type === 'cloudflare' && (
+                  <>
+                    <span className={styles.mmRowLabel}>Account ID</span>
+                    <input className={styles.mmInput} style={{ width: 220 }} placeholder="Cloudflare 账户 ID" value={form.accountId} onChange={(e) => setChannelForms((m) => ({ ...m, [c.id]: { ...form, accountId: e.target.value } }))} />
                   </>
                 )}
                 <button className={styles.mmBtn} onClick={() => saveChannel(c.id)}>保存</button>

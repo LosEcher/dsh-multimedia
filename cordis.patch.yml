@@ -40,3 +40,28 @@
             apiKeyEnv: ''
             apiKey: ''
             baseUrl: 'http://127.0.0.1:8188'
+          # ── 免费渠道（无需 API Key，开箱即用） ─────────────────────────────
+          - id: pollinations
+            type: pollinations
+            label: Pollinations（免费）
+            enabled: true
+            apiKeyEnv: ''
+            apiKey: ''
+            baseUrl: 'https://image.pollinations.ai'
+          - id: googletts
+            type: googletts
+            label: Google TTS（免费）
+            enabled: true
+            apiKeyEnv: ''
+            apiKey: ''
+            baseUrl: 'https://translate.google.com'
+          # Cloudflare Workers AI：免费层 10k neurons/天；需 CF_API_TOKEN + extra.accountId
+          - id: cloudflare
+            type: cloudflare
+            label: Cloudflare Workers AI
+            enabled: false
+            apiKeyEnv: CF_API_TOKEN
+            apiKey: ''
+            baseUrl: 'https://api.cloudflare.com/client/v4'
+            extra:
+              accountId: ''
