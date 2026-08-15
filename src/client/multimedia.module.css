@@ -121,14 +121,16 @@
 .mmJobBar { height: 4px; border-radius: 2px; background: var(--dsw-alias-bg-layer-3); margin-top: 6px; overflow: hidden; }
 .mmJobBarFill { height: 100%; background: var(--dsw-alias-brand-primary); border-radius: 2px; transition: width .3s; }
 
-.mmBadge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid transparent; }
-/* 状态徽章对比度修复（2026-08-15）：secondary 底+primary 字 ≈1.17:1 不达标，
-   对齐 harness 内置范式——tertiary(浅 tint) 底 + primary(深 shade) 字；
-   secondary 归位为边框（kimi k3 UI 评审 + WCAG 4.5:1）。 */
-.mmBadgeOk { background: var(--dsw-alias-state-success-tertiary); color: var(--dsw-alias-state-success-primary); border-color: var(--dsw-alias-state-success-secondary); }
+.mmBadge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; }
+.mmBadgeDot { flex: none; }
+/* 状态徽章对比度修复 P0（2026-08-15）：tertiary(浅 tint) 底 + 深字。
+   文字用 color-mix 向 label-primary 混深/混亮——label-primary 随主题反转
+   （浅色=近黑、深色=近白），同一表达式双主题自适应：浅色 4.5-7.8:1、深色 6-9.5:1
+   （WCAG AA）。与 harness 内置 tagContext color-mix 手法同构。secondary 归位边框。 */
+.mmBadgeOk { background: var(--dsw-alias-state-success-tertiary); color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 55%, var(--dsw-alias-label-primary)); border-color: var(--dsw-alias-state-success-secondary); }
 /* error 无 tertiary 令牌：用 color-mix 淡红底（ui-trajectory 同款范式） */
-.mmBadgeErr { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, var(--dsw-alias-bg-layer-1)); color: var(--dsw-alias-state-error-primary); }
-.mmBadgeWarn { background: var(--dsw-alias-state-warn-tertiary); color: var(--dsw-alias-state-warn-primary); border-color: var(--dsw-alias-state-warn-secondary); }
+.mmBadgeErr { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, var(--dsw-alias-bg-layer-1)); color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 55%, var(--dsw-alias-label-primary)); }
+.mmBadgeWarn { background: var(--dsw-alias-state-warn-tertiary); color: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 55%, var(--dsw-alias-label-primary)); border-color: var(--dsw-alias-state-warn-secondary); }
 .mmBadgeInfo { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); border-color: var(--dsw-alias-border-l2); }
 
 /* ── 作品库 ── */

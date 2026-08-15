@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import styles from './multimedia.module.css'
+import { StatusBadge } from './StatusBadge.tsx'
 import { NS, type MultimediaKey } from './locales.ts'
 import type {} from './locales.ts'
 
@@ -527,7 +528,7 @@ export function MultimediaTab({ t }: MultimediaTabProps) {
           <div className={styles.mmJobStrip}>
             {activeJobs.map((j) => (
               <div key={j.id} className={styles.mmJobItem}>
-                <span className={`${styles.mmBadge} ${statusBadge(j.status)}`}>{statusLabel(j.status)}</span>
+                <StatusBadge status={j.status}>{statusLabel(j.status)}</StatusBadge>
                 <span className={styles.mmJobMeta}>
                   {t('jobMeta', { id: j.id, channel: j.channelLabel, desc: j.prompt.slice(0, 60) || j.note || '' })}
                 </span>
@@ -567,7 +568,7 @@ export function MultimediaTab({ t }: MultimediaTabProps) {
               <div className={styles.mmTileBody}>
                 <div className={styles.mmTilePrompt}>{j.prompt || `(${j.modality})`}</div>
                 <div className={styles.mmTileMeta}>
-                  <span className={`${styles.mmBadge} ${statusBadge(j.status)}`}>{statusLabel(j.status)}</span>
+                  <StatusBadge status={j.status}>{statusLabel(j.status)}</StatusBadge>
                   <span>{j.channelLabel}</span>
                   <span>{fmtTime(j.createdAt)}</span>
                 </div>
@@ -657,7 +658,7 @@ export function MultimediaTab({ t }: MultimediaTabProps) {
       <div className={styles.mmOverlay} role="dialog" aria-modal="true" aria-label={t('previewAria')} onClick={() => setPreview(null)}>
         <div className={styles.mmPreview} onClick={(e) => e.stopPropagation()}>
           <div className={`${styles.mmRow} ${styles.mmRowGap8}`}>
-            <span className={`${styles.mmBadge} ${statusBadge(job.status)}`}>{statusLabel(job.status)}</span>
+            <StatusBadge status={job.status}>{statusLabel(job.status)}</StatusBadge>
             <strong>{job.channelLabel}</strong>
             <span className={styles.mmHint}>{job.model || ''}</span>
             <span className={styles.mmHint}>{fmtTime(job.createdAt)}</span>
