@@ -6,7 +6,6 @@
 `media_status` / `media_export`），支持产物下载、复制、导出到目录。
 
 > 界面设计参考调研（LobeHub/LobeChat、OpenWebUI、Sora/可灵、Coze、Dify 等平台的生图/视频/TTS
-> （LobeHub/LobeChat、OpenWebUI、Sora/可灵、Coze、Dify 等平台的生图/视频/TTS
 > 页面模式），渠道 API 参考 fal.ai docs 与 ElevenLabs 文档。设计文档见
 > `docs/DESIGN.md`。
 
