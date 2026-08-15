@@ -128,15 +128,39 @@ export function MultimediaTab(_props: ConvViewProps) {
     toastTimer.current = setTimeout(() => setToast(''), 3200)
   }, [])
 
+  const hasActiveRef = useRef(false)
+
   const refreshJobs = useCallback(async () => {
-    try { setJobs((await api<{ jobs: Job[] }>('/multimedia/tasks?limit=60')).jobs ?? []) } catch { /* silent poll */ }
+    try {
+      const list = (await api<{ jobs: Job[] }>('/multimedia/tasks?limit=60')).jobs ?? []
+      hasActiveRef.current = list.some((j) => ['queued', 'running', 'cancelling'].includes(j.status))
+      setJobs(list)
+    } catch { /* silent poll */ }
   }, [])
 
   const refreshChannels = useCallback(async () => {
     try { setChannels((await api<{ channels: Channel[] }>('/multimedia/channels')).channels ?? []) } catch { /* silent */ }
   }, [])
 
-  useEffect(() => { refreshChannels(); refreshJobs(); const t = setInterval(refreshJobs, 2000); return () => clearInterval(t) }, [refreshChannels, refreshJobs])
+  // 轮询门控：仅当存在进行中任务或停留在作品库 tab 时轮询（减少无效请求）
+  const tabRef = useRef(tab)
+  tabRef.current = tab
+  useEffect(() => {
+    refreshChannels()
+    refreshJobs()
+    const t = setInterval(() => {
+      if (hasActiveRef.current || tabRef.current === 'gallery') refreshJobs()
+    }, 2000)
+    return () => clearInterval(t)
+  }, [refreshChannels, refreshJobs])
+
+  // 灯箱 Esc 关闭
+  useEffect(() => {
+    if (!preview) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreview(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [preview])
 
   const capableChannels = useMemo(
     () => channels.filter((c) => c.enabled && (CAPABILITY[c.type] ?? []).includes(modality)),
@@ -559,7 +583,7 @@ export function MultimediaTab(_props: ConvViewProps) {
     if (!preview) return null
     const job = preview
     return (
-      <div className={styles.mmOverlay} onClick={() => setPreview(null)}>
+      <div className={styles.mmOverlay} role="dialog" aria-modal="true" aria-label="产物预览" onClick={() => setPreview(null)}>
         <div className={styles.mmPreview} onClick={(e) => e.stopPropagation()}>
           <div className={styles.mmRow} style={{ marginBottom: 8 }}>
             <span className={`${styles.mmBadge} ${statusBadge(job.status)}`}>{STATUS_LABEL[job.status] ?? job.status}</span>
