@@ -65,3 +65,13 @@
             baseUrl: 'https://api.cloudflare.com/client/v4'
             extra:
               accountId: ''
+          # xAI (Grok Imagine)：图片生成/编辑 + 视频生成/编辑/扩展（异步轮询）；
+          # 需 XAI_API_KEY（https://console.x.ai）。编辑/扩展由 agent 工具
+          # media_generate 的 params.action=edit|extend + params.image/video 输入驱动。
+          - id: xai
+            type: xai
+            label: xAI (Grok Imagine)
+            enabled: false
+            apiKeyEnv: XAI_API_KEY
+            apiKey: ''
+            baseUrl: 'https://api.x.ai/v1'

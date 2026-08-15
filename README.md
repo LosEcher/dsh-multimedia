@@ -35,6 +35,18 @@ API Key 策略：`apiKeyEnv`（环境变量）优先，其次页面输入的 `ap
 | `fal` | 文生图 / 文生视频 / TTS | `Authorization: Key <FAL_KEY>` | queue API，异步任务+轮询 |
 | `elevenlabs` | TTS / 文生图 | `xi-api-key` | 同步 TTS；图片走异步 Flows（免费层 10k credits/月） |
 | `comfyui` | 文生图 / 视频（工作流 JSON） | 无 | 本地 `127.0.0.1:8188`，需自备工作流 |
+| `xai` | 文生图 / 图生图（编辑）/ 文生视频 / 视频编辑 / 视频扩展 | `Bearer <XAI_API_KEY>` | OpenAI 兼容 `https://api.x.ai/v1`；图片同步返回、视频异步轮询（request_id → done） |
+
+> xAI（Grok Imagine）渠道：模型 `grok-imagine-image-2.0`（图片生成/编辑）、
+> `grok-imagine-video-1.5`（视频生成/编辑/扩展）。渠道页面可生成/编辑图片、
+> 生成视频；**编辑与扩展**（需输入素材）由 agent 工具驱动：
+> `media_generate(channel:'xai', modality:'image'|'video', prompt, params:{action:'edit'|'extend', image|video: '<http(s) url 或 data: URI>'})`。
+> 视频为异步任务，`media_status` 可查询进度；结果含 xAI 用量（`cost_in_usd_ticks`）。
+>
+> **独立插件抽取路径**（dsh-xai 规划）：xAI 适配器是模块级工厂
+> `createXaiAdapter({req, sleep, log, collect})`（`lib/adapters.mjs` 顶部），
+> 不依赖 Cordis 上下文——未来需要专属控制台（用量看板/编辑工作台）时，
+> 直接 `import { createXaiAdapter }` 复用，UI 与任务队列按需自建。
 
 > 免费验证路径（2026-08-15 实测全通）：Pollinations 文生图 + Google TTS 语音，
 > 零注册零 Key；Cloudflare/ElevenLabs 免费层需注册。视频生成暂无免费 API，

@@ -218,6 +218,125 @@ console.log('— adapters (fake fetch) —')
   }
 }
 
+console.log('— xai adapter (fake fetch) —')
+{
+  const base = 'https://api.x.ai/v1'
+  const XAI_KEY = 'xai-test-key'
+  const xaiChannel = { id: 'xai', type: 'xai', label: 'xAI', enabled: true, apiKeyEnv: '', apiKey: XAI_KEY, baseUrl: base }
+  /** fake fetch with per-route response sequences (array = successive replies). */
+  const routes = new Map()
+  const seqFetch = async (url, init) => {
+    const key = `${init?.method ?? 'GET'} ${url}`
+    const hit = routes.get(key)
+    if (Array.isArray(hit)) {
+      if (!hit.length) throw new Error(`unmocked: ${key}`)
+      routes.set(key, hit.slice(1)) // consume sequence: shift front, keep remainder
+      return hit[0]
+    }
+    if (!hit) throw new Error(`unmocked: ${key}`)
+    if (init?.body) hit._body = String(init.body)
+    if (typeof hit === 'string') return { ok: true, status: 200, headers: { get: () => '' }, json: async () => JSON.parse(hit), text: async () => hit, arrayBuffer: async () => Buffer.from(hit) }
+    return hit
+  }
+  const adapters = createAdapters({ fetchImpl: seqFetch, sleep: async () => {} })
+  const api = {
+    channelKey: () => XAI_KEY,
+    progress: () => {},
+    saveOutput: async (j, o) => { const out = { ...o, idx: j.outputs.length, localFile: `/tmp/xai${j.outputs.length}`, fileUrl: '/f', mime: o.mime ?? '', size: 10, sizeLabel: '10 B' }; j.outputs.push(out); return out },
+  }
+
+  // xai image generate（同步）
+  {
+    const imgRoute = {
+      ok: true, status: 200, headers: { get: () => '' },
+      json: async () => ({ data: [{ url: 'https://imgen.x.ai/xai-tmp-a.jpeg', mime_type: 'image/jpeg', revised_prompt: '' }], usage: { cost_in_usd_ticks: 200000000 } }),
+    }
+    routes.set(`POST ${base}/images/generations`, imgRoute)
+    const job = createJob({ channelId: 'xai', modality: 'image', prompt: 'a cat', params: { num_images: 2 }, model: '' })
+    const result = await adapters.xai.generate(xaiChannel, job, api)
+    ok('xai image generate outputs 1 image', result.outputs.length === 1 && result.outputs[0].kind === 'image')
+    ok('xai image body has model+prompt+n', (imgRoute._body ?? '').includes('grok-imagine-image-2.0') && (imgRoute._body ?? '').includes('a cat') && (imgRoute._body ?? '').includes('"n":2'))
+    ok('xai image meta usage captured', result.meta.usage?.cost_in_usd_ticks === 200000000)
+  }
+
+  // xai image edit（同步，带 image 输入）
+  {
+    const editRoute = {
+      ok: true, status: 200, headers: { get: () => '' },
+      json: async () => ({ data: [{ url: 'https://imgen.x.ai/xai-tmp-b.png' }] }),
+    }
+    routes.set(`POST ${base}/images/edits`, editRoute)
+    const job = createJob({ channelId: 'xai', modality: 'image', prompt: 'make it a sketch', params: { action: 'edit', image: 'https://example.com/in.png' }, model: '' })
+    const result = await adapters.xai.generate(xaiChannel, job, api)
+    ok('xai image edit hits /images/edits', result.outputs.length === 1)
+    ok('xai image edit body carries image.url', (editRoute._body ?? '').includes('https://example.com/in.png'))
+  }
+
+  // xai video generate（异步：submit → poll processing → done + video_url）
+  {
+    routes.set(`POST ${base}/videos/generations`, {
+      ok: true, status: 200, headers: { get: () => '' },
+      json: async () => ({ request_id: 'v-1' }),
+    })
+    routes.set(`GET ${base}/videos/v-1`, [
+      {
+        ok: true, status: 200, headers: { get: () => '' },
+        json: async () => ({ status: 'processing', progress: 0.4 }),
+      },
+      {
+        ok: true, status: 200, headers: { get: () => '' },
+        json: async () => ({ status: 'done', video_url: 'https://video.x.ai/out.mp4' }),
+      },
+    ])
+    const job = createJob({ channelId: 'xai', modality: 'video', prompt: 'lake at sunrise', params: { duration: 6 }, model: '' })
+    const result = await adapters.xai.generate(xaiChannel, job, api)
+    ok('xai video generate polls to done', result.outputs.length === 1 && result.outputs[0].kind === 'video')
+    ok('xai video meta providerJobId', result.meta.providerJobId === 'v-1' && result.meta.action === 'generate')
+  }
+
+  // xai video extend（异步，带 video 输入）
+  {
+    routes.set(`POST ${base}/videos/extensions`, {
+      ok: true, status: 200, headers: { get: () => '' },
+      json: async () => ({ request_id: 'v-2' }),
+    })
+    routes.set(`GET ${base}/videos/v-2`, [
+      {
+        ok: true, status: 200, headers: { get: () => '' },
+        json: async () => ({ status: 'pending' }),
+      },
+      {
+        ok: true, status: 200, headers: { get: () => '' },
+        json: async () => ({ status: 'done', data: [{ url: 'https://video.x.ai/ext.mp4' }] }),
+      },
+    ])
+    const job = createJob({ channelId: 'xai', modality: 'video', prompt: 'continue the wave', params: { action: 'extend', video: { file_id: 'file-9' } }, model: 'grok-imagine-video-1.5' })
+    const result = await adapters.xai.generate(xaiChannel, job, api)
+    ok('xai video extend outputs video', result.outputs.length === 1 && result.outputs[0].kind === 'video')
+    ok('xai video extend meta action', result.meta.action === 'extend')
+  }
+
+  // xai resume：复用 providerJobId 继续轮询
+  {
+    routes.set(`GET ${base}/videos/v-1`, [
+      {
+        ok: true, status: 200, headers: { get: () => '' },
+        json: async () => ({ status: 'done', video_url: 'https://video.x.ai/resume.mp4' }),
+      },
+    ])
+    const job = createJob({ channelId: 'xai', modality: 'video', prompt: '', params: {}, model: '' })
+    job.meta = { providerJobId: 'v-1' }
+    const result = await adapters.xai.resume(xaiChannel, job, api)
+    ok('xai resume returns output', result.outputs.length === 1 && result.meta.providerJobId === 'v-1')
+  }
+
+  // xai test：无 key 时给出明确提示
+  {
+    const noKey = await adapters.xai.test({ ...xaiChannel, apiKey: '', apiKeyEnv: 'XAI_API_KEY' })
+    ok('xai test without key reports missing key', noKey.ok === false && noKey.message.includes('XAI_API_KEY'))
+  }
+}
+
 rmSync(DATA, { recursive: true, force: true })
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)
