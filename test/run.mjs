@@ -131,6 +131,25 @@ console.log('— adapters (fake fetch) —')
     ok('elevenlabs flows image', result.outputs.length === 1 && result.meta.providerJobId === 'flow-1' && result.outputs[0].url.includes('storage.elevenlabs.io'))
   }
 
+  // elevenlabs balance: GET /v1/user → subscription quota
+  {
+    const balChannel = { id: 'eleven', type: 'elevenlabs', label: 'ElevenLabs', enabled: true, apiKeyEnv: '', apiKey: key, baseUrl: 'https://api.elevenlabs.io/v1' }
+    routes.set('GET https://api.elevenlabs.io/v1/user', {
+      ok: true, status: 200, headers: { get: () => 'application/json' },
+      json: async () => ({ subscription: { tier: 'creator', character_count: 12000, character_limit: 100000, next_character_count_reset_unix: 1_800_000_000 } }),
+    })
+    const bal = await adapters.elevenlabs.balance(balChannel)
+    ok('elevenlabs balance quota', bal?.kind === 'quota' && bal.breakdown?.tier === 'creator')
+    ok('elevenlabs balance percent', Math.abs((bal.windows?.[0]?.usedPercent ?? 0) - 12) < 0.01)
+    ok('elevenlabs balance reset', bal.windows?.[0]?.resetsAt === 1_800_000_000_000)
+    // test() no longer throws ReferenceError (was referencing free `api`)
+    const t = await adapters.elevenlabs.test(balChannel)
+    ok('elevenlabs test ok (factory)', t.ok === true)
+    // no key → error kind
+    const bal2 = await adapters.elevenlabs.balance({ ...balChannel, apiKey: '' })
+    ok('elevenlabs balance missing key', bal2?.kind === 'error')
+  }
+
   // googletts: GET translate_tts → mp3 bytes
   {
     routes.set('GET https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN&q=hello', {
@@ -445,6 +464,32 @@ console.log('— zenmux adapter (fake fetch) —')
     const noKey = await adapters.zenmux.test({ ...zmChannel, apiKey: '', apiKeyEnv: 'ZENMUX_API_KEY' })
     ok('zenmux test without key reports missing key', noKey.ok === false && noKey.message.includes('ZENMUX_API_KEY'))
   }
+}
+
+console.log('— media_balance tool —')
+{
+  const { createToolDefs } = await import('../lib/tools.mjs')
+  const channels = {
+    list: () => [
+      { id: 'eleven', label: 'ElevenLabs', type: 'elevenlabs' },
+      { id: 'fal', label: 'fal.ai', type: 'fal' },
+    ],
+    get: (id) => ({ id, label: id === 'eleven' ? 'ElevenLabs' : 'fal.ai', type: id === 'eleven' ? 'elevenlabs' : 'fal' }),
+  }
+  const queryBalance = async (c) => {
+    if (c.type === 'elevenlabs') {
+      return { kind: 'quota', label: '12,000 / 100,000 字符', windows: [{ label: 'characters', usedPercent: 12, resetsAt: 1_800_000_000_000 }], breakdown: { tier: 'creator' } }
+    }
+    return null
+  }
+  const [def] = (await createToolDefs({ channels, jobs: {}, awaitJob: async () => {}, summarize: () => '', dataDir: '/tmp', dispatch: () => {}, queryBalance }))
+    .filter((d) => d.name === 'media_balance')
+  const res = await def.execute({})
+  ok('media_balance lists quota + unsupported', res.lines.length === 2 && res.lines[0].includes('ElevenLabs') && res.lines[1].includes('不支持'))
+  const res2 = await def.execute({ channel: 'eleven' })
+  ok('media_balance single channel', res2.lines.length === 1 && res2.lines[0].includes('12,000 / 100,000'))
+  const res3 = await def.execute({ channel: 'fal' })
+  ok('media_balance unsupported channel', res3.lines.length === 1 && res3.lines[0].includes('fal.ai'))
 }
 
 rmSync(DATA, { recursive: true, force: true })

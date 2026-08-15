@@ -106,6 +106,18 @@ function fmtTime(ts: number): string {
   return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+/** 任务 usage 摘要（xai cost_in_usd_ticks：1e9 ticks = $1；zenmux tokens）。 */
+function formatUsage(u: Record<string, unknown>): string {
+  const parts: string[] = []
+  const pt = u.prompt_tokens
+  const ct = u.completion_tokens
+  const tt = u.total_tokens
+  if (typeof pt === 'number' && typeof ct === 'number') parts.push(`${pt}+${ct} tok`)
+  else if (typeof tt === 'number') parts.push(`${tt} tok`)
+  if (typeof u.cost_in_usd_ticks === 'number') parts.push(`$${(u.cost_in_usd_ticks / 1e9).toFixed(4)}`)
+  return parts.join(' · ')
+}
+
 /* ── component ── */
 
 export function MultimediaTab({ t }: MultimediaTabProps) {
@@ -683,6 +695,11 @@ export function MultimediaTab({ t }: MultimediaTabProps) {
           {job.outputs[0] && (
             <div className={`${styles.mmHint} ${styles.mmHintTop}`}>
               {job.outputs.map((o) => t('outputSummary', { idx: o.idx, kind: o.kind, size: o.sizeLabel, seed: o.seed != null ? ` seed=${o.seed}` : '' })).join(t('metaSep'))}
+            </div>
+          )}
+          {job.meta?.usage && typeof job.meta.usage === 'object' && formatUsage(job.meta.usage as Record<string, unknown>) && (
+            <div className={`${styles.mmHint} ${styles.mmHintTop}`}>
+              {t('usageLine', { text: formatUsage(job.meta.usage as Record<string, unknown>) })}
             </div>
           )}
         </div>

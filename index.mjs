@@ -113,6 +113,28 @@ export function apply(ctx, rawConfig = {}) {
     },
   }
 
+  /* ─────────────── balance / quota query (adapter.balance) ─────────────── */
+
+  const BALANCE_TTL_MS = 30_000
+  const balanceCache = new Map() // channelId -> { at, value }
+
+  /** 查询渠道余额/配额。adapter 未实现 balance() 返回 null；结果缓存 30s，force 绕过。 */
+  async function queryBalance(channel, force = false) {
+    const adapter = adapters[channel.type]
+    if (!adapter?.balance) return null
+    if (!channelKey(channel)) return { kind: 'error', message: '未配置 API Key' }
+    const hit = balanceCache.get(channel.id)
+    if (!force && hit && Date.now() - hit.at < BALANCE_TTL_MS) return hit.value
+    let value
+    try {
+      value = await adapter.balance(channel)
+    } catch (e) {
+      value = { kind: 'error', message: e?.message ?? String(e) }
+    }
+    balanceCache.set(channel.id, { at: Date.now(), value })
+    return value
+  }
+
   /* ─────────────── job runner ─────────────── */
 
   const CONCURRENCY = 2
@@ -251,6 +273,14 @@ export function apply(ctx, rawConfig = {}) {
           const list = await adapter?.models?.(channel, url.searchParams.get('modality') ?? 'image')
           return sendJson(res, 200, { models: list ?? [] })
         }
+        if (method === 'GET' && p === '/multimedia/balance') {
+          const channel = channels.get(url.searchParams.get('channelId') ?? '')
+          if (!channel) return sendJson(res, 404, { error: '渠道不存在' })
+          const force = url.searchParams.get('force') === '1'
+          const balance = await queryBalance(channel, force)
+          if (!balance) return sendJson(res, 400, { error: '该渠道不支持余额查询' })
+          return sendJson(res, balance.kind === 'error' ? 400 : 200, { balance })
+        }
 
         /* jobs */
         if (method === 'POST' && p === '/multimedia/generate') {
@@ -349,7 +379,13 @@ export function apply(ctx, rawConfig = {}) {
       note: job.note,
       error: job.error,
       outputs: job.outputs.map((o) => ({ ...o, localFile: undefined })),
-      meta: { latencyMs: job.meta?.latencyMs, providerJobId: job.meta?.providerJobId, seed: job.meta?.seed, voice: job.meta?.voice },
+      meta: {
+        latencyMs: job.meta?.latencyMs,
+        providerJobId: job.meta?.providerJobId,
+        seed: job.meta?.seed,
+        voice: job.meta?.voice,
+        usage: job.meta?.usage ?? undefined,
+      },
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
     }
@@ -379,12 +415,26 @@ export function apply(ctx, rawConfig = {}) {
       lines.push(`产物[${o.idx}] (${o.kind}, ${o.sizeLabel}): ${o.localFile || o.url}`)
     }
     if (job.meta?.latencyMs) lines.push(`耗时：${(job.meta.latencyMs / 1000).toFixed(1)}s`)
+    const usage = job.meta?.usage
+    if (usage && typeof usage === 'object') {
+      const parts = []
+      if (typeof usage.prompt_tokens === 'number' && typeof usage.completion_tokens === 'number') {
+        parts.push(`${usage.prompt_tokens}+${usage.completion_tokens} tok`)
+      } else if (typeof usage.total_tokens === 'number') {
+        parts.push(`${usage.total_tokens} tok`)
+      }
+      // xAI 的 cost_in_usd_ticks：1e9 ticks = $1（换算系数按 xAI 文档）
+      if (typeof usage.cost_in_usd_ticks === 'number') {
+        parts.push(`$${(usage.cost_in_usd_ticks / 1e9).toFixed(4)}`)
+      }
+      if (parts.length) lines.push(`用量：${parts.join('，')}`)
+    }
     return lines.join('\n')
   }
 
   /* ─────────────── agent tools（定义见 lib/tools.mjs，纯模块可预检） ─────────────── */
 
-  for (const def of createToolDefs({ channels, jobs, awaitJob, summarize, dataDir, dispatch })) {
+  for (const def of createToolDefs({ channels, jobs, awaitJob, summarize, dataDir, dispatch, queryBalance })) {
     disposers.push(ctx.tools.register(defineTool(def)))
   }
 

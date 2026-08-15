@@ -41,7 +41,7 @@ export type MultimediaKey =
   | 'addChannelTitle' | 'channelIdPlaceholder' | 'displayNamePlaceholder' | 'add'
   // preview
   | 'previewAria' | 'close' | 'download' | 'copyLink' | 'copyPrompt' | 'regen' | 'exportTo' | 'export'
-  | 'exportPathPlaceholder' | 'outputSummary' | 'linkCopy' | 'promptCopy'
+  | 'exportPathPlaceholder' | 'outputSummary' | 'linkCopy' | 'promptCopy' | 'usageLine'
   // confirmation modal
   | 'deleteChannelTitle' | 'deleteChannelBody' | 'deleteJobTitle' | 'deleteJobBody'
   | 'cancelJobTitle' | 'cancelJobBody' | 'modalCancel' | 'modalConfirmDelete' | 'modalConfirmCancel'
@@ -157,6 +157,7 @@ export const en: Record<MultimediaKey, string> = {
   export: 'Export',
   exportPathPlaceholder: '/absolute/path/dir',
   outputSummary: 'Output[{idx}] {kind} {size}{seed}',
+  usageLine: 'Usage: {text}',
   linkCopy: 'link',
   promptCopy: 'prompt',
 
@@ -286,6 +287,7 @@ export const zh: Record<MultimediaKey, string> = {
   export: '导出',
   exportPathPlaceholder: '/绝对/路径/目录',
   outputSummary: '产物[{idx}] {kind} {size}{seed}',
+  usageLine: '用量：{text}',
   linkCopy: '链接',
   promptCopy: '提示词',
 
