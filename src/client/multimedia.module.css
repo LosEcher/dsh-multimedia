@@ -1,0 +1,212 @@
+/* dsh-multimedia — 多媒体生成页面样式。只使用 --dsw-alias-* 白名单令牌。 */
+
+.mmRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px 24px;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── 页头分段切换 ── */
+.mmTabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-2);
+  border: 1px solid var(--dsw-alias-border-l2);
+  width: fit-content;
+}
+
+.mmTab {
+  border: none;
+  border-radius: 8px;
+  padding: 5px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.mmTab:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.mmTab:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }
+
+.mmTabActive {
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  box-shadow: 0 0 0 1px var(--dsw-alias-border-l3);
+  font-weight: 600;
+}
+
+/* ── 通用卡片 ── */
+.mmCard {
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.mmTitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.mmRow { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.mmRowLabel { font-size: 12px; color: var(--dsw-alias-label-tertiary); min-width: 56px; }
+
+.mmInput, .mmSelect, .mmTextarea {
+  background: var(--dsw-alias-bg-layer-2);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  color: var(--dsw-alias-label-primary);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+}
+.mmInput:focus, .mmSelect:focus, .mmTextarea:focus {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary);
+}
+.mmSelect { max-width: 300px; }
+.mmInput { max-width: 220px; }
+.mmTextarea { width: 100%; min-height: 84px; resize: vertical; }
+
+.mmBtn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  padding: 6px 14px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.mmBtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-solid); }
+.mmBtn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }
+.mmBtn:disabled { opacity: .45; cursor: not-allowed; }
+
+.mmBtnPrimary {
+  background: var(--dsw-alias-button-primary-fill);
+  border-color: transparent;
+  color: var(--dsw-alias-label-primary-foreground);
+  font-weight: 600;
+}
+.mmBtnPrimary:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover); }
+
+.mmBtnDanger { color: var(--dsw-alias-state-error-primary); border-color: var(--dsw-alias-state-error-secondary); }
+.mmBtnDanger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }
+
+.mmHint { font-size: 12px; color: var(--dsw-alias-label-tertiary); }
+.mmError { font-size: 12px; color: var(--dsw-alias-state-error-primary); margin-top: 6px; }
+.mmOk { font-size: 12px; color: var(--dsw-alias-state-success-primary); margin-top: 6px; }
+
+/* ── 任务条 ── */
+.mmJobStrip { display: flex; flex-direction: column; gap: 8px; }
+
+.mmJobItem {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--dsw-alias-bg-layer-2);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.mmJobMeta { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mmJobBar { height: 4px; border-radius: 2px; background: var(--dsw-alias-bg-layer-3); margin-top: 6px; overflow: hidden; }
+.mmJobBarFill { height: 100%; background: var(--dsw-alias-brand-primary); border-radius: 2px; transition: width .3s; }
+
+.mmBadge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+.mmBadgeOk { background: var(--dsw-alias-state-success-secondary); color: var(--dsw-alias-state-success-primary); }
+.mmBadgeErr { background: var(--dsw-alias-state-error-secondary); color: var(--dsw-alias-state-error-primary); }
+.mmBadgeWarn { background: var(--dsw-alias-state-warn-secondary); color: var(--dsw-alias-state-warn-primary); }
+.mmBadgeInfo { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
+
+/* ── 作品库 ── */
+.mmGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.mmTile {
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--dsw-alias-bg-layer-1);
+  cursor: pointer;
+}
+.mmTile:hover { border-color: var(--dsw-alias-brand-primary); }
+
+.mmThumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.mmTileBody { padding: 8px 10px; }
+.mmTilePrompt {
+  font-size: 12px; color: var(--dsw-alias-label-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mmTileMeta { font-size: 11px; color: var(--dsw-alias-label-tertiary); margin-top: 4px; display: flex; gap: 8px; align-items: center; }
+
+/* ── 预览浮层 ── */
+.mmOverlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--dsw-alias-bg-mask-2);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
+}
+
+.mmPreview {
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 12px;
+  max-width: 860px;
+  width: 100%;
+  max-height: 92vh;
+  overflow: auto;
+  padding: 18px 20px;
+  box-shadow: 0 12px 40px var(--dsw-alias-bg-mask-3);
+}
+
+.mmMedia {
+  width: 100%;
+  max-height: 52vh;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+  display: block;
+}
+
+.mmPreviewRow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+
+/* ── 渠道 ── */
+.mmChannelCard { display: flex; flex-direction: column; gap: 8px; }
+.mmChannelHead { display: flex; align-items: center; gap: 10px; }
+
+.mmSwitch { position: relative; width: 34px; height: 19px; flex: none; }
+.mmSwitch input { opacity: 0; width: 0; height: 0; }
+.mmSwitchTrack {
+  position: absolute; inset: 0; border-radius: 99px;
+  background: var(--dsw-alias-bg-layer-3);
+  transition: background .2s; cursor: pointer;
+}
+.mmSwitch input:checked + .mmSwitchTrack { background: var(--dsw-alias-state-success-primary); }
+.mmSwitchThumb {
+  position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+  border-radius: 50%; background: var(--dsw-alias-label-primary-foreground);
+  transition: transform .2s;
+}
+.mmSwitch input:checked ~ .mmSwitchThumb { transform: translateX(15px); }
+
+.mmKeyTag { font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
+.mmKeyTagMissing { color: var(--dsw-alias-state-warn-primary); background: var(--dsw-alias-state-warn-secondary); }

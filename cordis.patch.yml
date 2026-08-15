@@ -1,0 +1,42 @@
+# dsh-multimedia bundle patch: host row (mounts /multimedia API + agent tools
+# media_generate / media_list / media_status / media_export, and the
+# '多媒体' conversation tab via dsh.client).
+#
+# Install:  dsh plugin --profile web add link:/Users/echerlos/syncthing/project/dsplugins/dsh-multimedia
+# Requires dsh web restart (host code). Client bundle edits: rebuild + refresh.
+#
+# 渠道配置说明（v0.1）：
+# - 种子渠道写在这里；运行时渠道设置（页面「渠道设置」区）写入
+#   dataDir/channels.json，运行时值优先于本行（仅覆盖已存在渠道的字段，
+#   apiKey 留空表示不改）。
+# - API Key 一律走环境变量（apiKeyEnv），页面输入框填了 key 也只在内存/
+#   channels.json 中保存，绝不写进本文件。
+- insert:
+    - id: multimedia
+      name: dsh-multimedia
+      inject: [timer, webServer, tools]
+      config:
+        dataDir: '~/.dsh/multimedia'
+        # 渠道种子：页面可增删/启停/改名。apiKeyEnv 优先，其次 apiKey 字面量。
+        channels:
+          - id: fal
+            type: fal
+            label: fal.ai
+            enabled: false
+            apiKeyEnv: FAL_KEY
+            apiKey: ''
+            baseUrl: 'https://queue.fal.run'
+          - id: elevenlabs
+            type: elevenlabs
+            label: ElevenLabs
+            enabled: false
+            apiKeyEnv: ELEVENLABS_API_KEY
+            apiKey: ''
+            baseUrl: 'https://api.elevenlabs.io/v1'
+          - id: comfyui
+            type: comfyui
+            label: ComfyUI (本地)
+            enabled: false
+            apiKeyEnv: ''
+            apiKey: ''
+            baseUrl: 'http://127.0.0.1:8188'
