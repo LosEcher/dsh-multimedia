@@ -2,7 +2,7 @@
 # media_generate / media_list / media_status / media_export, and the
 # '多媒体' conversation tab via dsh.client).
 #
-# Install:  dsh plugin --profile web add link:/Users/echerlos/syncthing/project/dsplugins/dsh-multimedia
+# Install:  dsh plugin --profile web add github:LosEcher/dsh-multimedia#main
 # Requires dsh web restart (host code). Client bundle edits: rebuild + refresh.
 #
 # 渠道配置说明（v0.1）：

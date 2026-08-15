@@ -13,7 +13,7 @@
 ## 安装
 
 ```sh
-dsh plugin --profile web add link:/Users/echerlos/syncthing/project/dsplugins/dsh-multimedia
+dsh plugin --profile web add github:LosEcher/dsh-multimedia#main
 # 重启 dsh web（host 代码），client 重建后刷新页面即可
 ```
 

@@ -20,7 +20,7 @@ import { createHash } from 'node:crypto'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 /** DSH source checkout root; override with $DSH_SOURCE when not the default. */
-const CHECKOUT = process.env.DSH_SOURCE ?? '/Users/echerlos/Downloads/projects/deepseek-harness'
+const CHECKOUT = process.env.DSH_SOURCE ?? join(homedir(), '.dsh/source/current')
 
 /** Loader entry name — must equal the patch row `name` EXACTLY. */
 const MANIFEST = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
