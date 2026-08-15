@@ -210,3 +210,50 @@
 
 .mmKeyTag { font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
 .mmKeyTagMissing { color: var(--dsw-alias-state-warn-primary); background: var(--dsw-alias-state-warn-secondary); }
+
+/* ── 内联样式迁移（类化） ── */
+/* 行内修饰：顶部对齐 / 紧凑 / 无间距 / 大间距 */
+.mmRowTop { align-items: flex-start; }
+.mmRowTight { margin-bottom: 4px; }
+.mmRowNone { margin-bottom: 0; }
+.mmRowGap8 { margin-bottom: 8px; }
+
+/* 弹性占位（flex: 1 空隙） */
+.mmSpacer { flex: 1; }
+
+/* 媒体元素 */
+.mmAudioWrap { padding: 12px 0; }
+.mmAudio { width: 100%; display: block; }
+.mmThumbAudio { display: flex; align-items: center; justify-content: center; font-size: 28px; }
+
+/* 工作流 JSON 文本域 */
+.mmWorkflowTextarea { min-height: 140px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* 输入宽度工具类（数值输入 / 表单字段） */
+.mmW60 { width: 60px; max-width: 60px; }
+.mmW70 { width: 70px; max-width: 70px; }
+.mmW80 { width: 80px; max-width: 80px; }
+.mmW100 { width: 100px; max-width: 100px; }
+.mmW200 { width: 200px; max-width: 200px; }
+.mmW220 { width: 220px; max-width: 220px; }
+.mmW240 { width: 240px; max-width: 240px; }
+.mmW280 { width: 280px; max-width: 280px; }
+.mmW320 { width: 320px; max-width: 320px; }
+
+/* 区块间距 */
+.mmSection { margin-top: 12px; }
+.mmTitleInline { margin: 0; }
+
+/* 任务条 */
+.mmJobBarTrack { width: 120px; }
+
+/* 渠道列表 */
+.mmChannelList { display: flex; flex-direction: column; gap: 12px; }
+.mmBadgeType { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
+
+/* 预览浮层 */
+.mmPreviewMedia { max-height: 52vh; overflow: auto; }
+.mmHintTop { margin-top: 8px; }
+
+/* 下载链接（伪装成按钮的 <a>） */
+.mmLink { text-decoration: none; display: inline-block; }

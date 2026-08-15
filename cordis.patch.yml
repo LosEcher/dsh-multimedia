@@ -48,6 +48,7 @@
             apiKeyEnv: ''
             apiKey: ''
             baseUrl: 'https://image.pollinations.ai'
+            maxConcurrent: 1          # 免费层限 1 并发/5s，防滥用被限流
           - id: googletts
             type: googletts
             label: Google TTS（免费）
@@ -55,6 +56,7 @@
             apiKeyEnv: ''
             apiKey: ''
             baseUrl: 'https://translate.google.com'
+            maxConcurrent: 2          # 免费渠道防滥用
           # Cloudflare Workers AI：免费层 10k neurons/天；需 CF_API_TOKEN + extra.accountId
           - id: cloudflare
             type: cloudflare

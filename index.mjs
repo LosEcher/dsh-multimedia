@@ -118,6 +118,16 @@ export function apply(ctx, rawConfig = {}) {
   const CONCURRENCY = 2
   const running = new Set()
 
+  /** Per-channel concurrency cap (channel.maxConcurrent); default = global. */
+  function channelRunningCount(channelId) {
+    let n = 0
+    for (const id of running) {
+      const j = jobs.get(id)
+      if (j && j.channelId === channelId) n += 1
+    }
+    return n
+  }
+
   async function runJob(job) {
     running.add(job.id)
     const channel = channels.get(job.channelId)
@@ -150,6 +160,11 @@ export function apply(ctx, rawConfig = {}) {
     const queued = jobs.list({ status: 'queued' }).filter((j) => !running.has(j.id))
     for (const job of queued) {
       if (running.size >= CONCURRENCY) break
+      const channel = channels.get(job.channelId)
+      // Per-channel cap: free/rate-limited providers (e.g. pollinations
+      // 1 concurrent / 5s) must not be overwhelmed by the global pool.
+      const cap = channel?.maxConcurrent
+      if (cap && channelRunningCount(job.channelId) >= cap) continue
       runJob(job)
     }
   }
