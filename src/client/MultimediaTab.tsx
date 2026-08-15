@@ -106,15 +106,6 @@ function fmtTime(ts: number): string {
   return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-function statusBadge(status: string): string {
-  switch (status) {
-    case 'succeeded': return styles.mmBadgeOk
-    case 'failed': return styles.mmBadgeErr
-    case 'queued': case 'running': case 'cancelling': return styles.mmBadgeWarn
-    default: return styles.mmBadgeInfo
-  }
-}
-
 /* ── component ── */
 
 export function MultimediaTab({ t }: MultimediaTabProps) {
