@@ -485,10 +485,10 @@ export function MultimediaTab({ t }: MultimediaTabProps) {
           {activeChannel?.type === 'elevenlabs' && (
             <>
               <span className={styles.mmRowLabel}>{t('labelStability')}</span>
-              <input type="range" min={0} max={1} step={0.05} value={stability} onChange={(e) => setStability(Number(e.target.value))} />
+              <input type="range" className={styles.mmRange} min={0} max={1} step={0.05} value={stability} onChange={(e) => setStability(Number(e.target.value))} />
               <span className={styles.mmHint}>{stability.toFixed(2)}</span>
               <span className={styles.mmRowLabel}>{t('labelSimilarity')}</span>
-              <input type="range" min={0} max={1} step={0.05} value={similarity} onChange={(e) => setSimilarity(Number(e.target.value))} />
+              <input type="range" className={styles.mmRange} min={0} max={1} step={0.05} value={similarity} onChange={(e) => setSimilarity(Number(e.target.value))} />
               <span className={styles.mmHint}>{similarity.toFixed(2)}</span>
             </>
           )}
@@ -581,7 +581,7 @@ export function MultimediaTab({ t }: MultimediaTabProps) {
             <div key={c.id} className={`${styles.mmCard} ${styles.mmChannelCard}`}>
               <div className={styles.mmChannelHead}>
                 <label className={styles.mmSwitch}>
-                  <input type="checkbox" checked={c.enabled} onChange={(e) => toggleChannel(c.id, e.target.checked)} />
+                  <input type="checkbox" className={styles.mmCheckbox} checked={c.enabled} onChange={(e) => toggleChannel(c.id, e.target.checked)} />
                   <span className={styles.mmSwitchTrack} />
                   <span className={styles.mmSwitchThumb} />
                 </label>

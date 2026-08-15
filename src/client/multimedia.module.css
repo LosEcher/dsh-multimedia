@@ -60,22 +60,48 @@
 .mmRow { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .mmRowLabel { font-size: 12px; color: var(--dsw-alias-label-tertiary); min-width: 56px; }
 
+/* ── 表单控件（2026-08-15 控件样式升级，对齐 primitives Input 设计语言）──
+   统一 32px 高、8px 圆角、border-l2、focus 品牌色环；select 去除原生外观
+   （appearance:none），chevron 用 CSS mask + currentColor 画，随深浅主题；
+   checkbox/range 用 accent-color 主题化。参考 shadcn NativeSelect 规范。 */
 .mmInput, .mmSelect, .mmTextarea {
+  box-sizing: border-box;
   background: var(--dsw-alias-bg-layer-2);
   border: 1px solid var(--dsw-alias-border-l2);
   border-radius: 8px;
   color: var(--dsw-alias-label-primary);
-  padding: 6px 10px;
+  padding: 0 10px;
   font-size: 12px;
   font-family: inherit;
+  height: 32px;
+  transition: border-color .15s;
 }
+.mmTextarea { height: auto; padding: 6px 10px; }
 .mmInput:focus, .mmSelect:focus, .mmTextarea:focus {
   outline: none;
   border-color: var(--dsw-alias-brand-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 18%, transparent);
 }
-.mmSelect { max-width: 300px; }
+.mmInput::placeholder { color: var(--dsw-alias-label-dimmed); }
+.mmSelect {
+  max-width: 300px;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px;
+  cursor: pointer;
+  /* chevron：内联 SVG data-uri，fill 用 currentColor（随文字色/主题，shadcn NativeSelect 同款思路） */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-color: var(--dsw-alias-bg-layer-2);
+}
+.mmSelect option { color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-1); }
+.mmSelect:has(option[value=""]:checked) { color: var(--dsw-alias-label-dimmed); }
 .mmInput { max-width: 220px; }
 .mmTextarea { width: 100%; min-height: 84px; resize: vertical; }
+/* 原生 checkbox/range 主题化：一行 accent-color（随品牌色） */
+.mmCheckbox { accent-color: var(--dsw-alias-brand-primary); }
+.mmRange { accent-color: var(--dsw-alias-brand-primary); }
 
 .mmBtn {
   border: 1px solid var(--dsw-alias-border-l2);
