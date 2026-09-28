@@ -5,7 +5,8 @@
  * index.mjs，用桩 ctx 驱动 apply()。锁住四类只有"装到真宿主里"才暴露的漂移：
  *   1. 模块能加载（语法/裸导入/@deepseek-ai/dsh-tools 存在）——本插件**没有自己的
  *      node_modules**，宿主库一旦缺失/改名，生产里就是整棵插件树异常；
- *   2. 注入契约（inject=['timer','webServer','tools']）与路由注册（/multimedia 前缀）；
+ *   2. 注入契约（inject=['timer','webServer','tools']）与路由注册
+ *      （/multimedia 前缀 + /plugins/dsh-multimedia/status 约定信封）；
  *   3. **5 个 agent 工具都必须被真实 defineTool 编译并注册**（模型可见面：
  *      media_generate / media_list / media_status / media_balance / media_export）；
  *   4. 生命周期：dispose 后两个内部定时器必须真的停（否则每次插件重载都漏定时器，
@@ -103,11 +104,35 @@ test('host 冒烟：真实宿主库加载入口 + 注入/路由/工具面 + disp
 
     mod.apply(ctx, { dataDir })
 
-    // ── 路由：/multimedia 前缀（当前唯一路由；若将来补 /plugins/<id>/status 约定，同步改这里）──
+    // ── 路由：/multimedia 前缀 + /plugins/dsh-multimedia/status 约定信封 ──
     const media = ctx.routes.find((r) => r.path === '/multimedia')
     assert.ok(media, '/multimedia 前缀路由应注册')
     assert.equal(media.kind, 'prefix')
     assert.equal(typeof media.handler, 'function')
+
+    const status = ctx.routes.find((r) => r.path === '/plugins/dsh-multimedia/status')
+    assert.ok(status, '/plugins/dsh-multimedia/status 应注册（2026-08-23 统一约定，与 dashboards/scheduler 同构）')
+    assert.equal(status.kind, 'exact')
+    const res = {
+      statusCode: 0,
+      body: '',
+      writeHead(code) { this.statusCode = code },
+      end(chunk) { this.body = chunk ?? '' },
+    }
+    status.handler({ url: '/plugins/dsh-multimedia/status', method: 'GET' }, res)
+    const envelope = JSON.parse(res.body)
+    assert.equal(res.statusCode, 200)
+    assert.equal(envelope.ok, true)
+    assert.equal(envelope.plugin, 'dsh-multimedia')
+    assert.equal(typeof envelope.version, 'string', 'version 应来自 package.json')
+    assert.equal(envelope.lastError, null)
+    assert.deepEqual(
+      Object.keys(envelope.counts).sort(),
+      ['active', 'channels', 'channelsEnabled', 'failed', 'inflight', 'jobs'],
+    )
+    assert.equal(envelope.counts.jobs, 0, '临时 dataDir 下应无 job')
+    assert.equal(envelope.counts.inflight, 0)
+    assert.equal(envelope.detail.dataDir, dataDir, 'detail 应回显真实 dataDir（排障用）')
 
     // ── 数据目录隔离：apply 必须在传入的 dataDir 下建 results/，而不是用户 storages ──
     assert.ok(existsSync(join(dataDir, 'results')), 'apply 应在配置的 dataDir 下创建 results/')
