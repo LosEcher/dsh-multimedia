@@ -17,7 +17,9 @@
   "license": "MIT",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node test/run.mjs"
+    "test": "node test/run.mjs && node --test test/host-smoke.test.mjs",
+    "test:unit": "node test/run.mjs",
+    "test:host-smoke": "node --test test/host-smoke.test.mjs"
   },
   "exports": {
     ".": "./index.mjs",
