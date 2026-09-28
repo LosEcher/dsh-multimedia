@@ -13,7 +13,7 @@
  */
 import { join, resolve } from 'node:path'
 import { homedir } from 'node:os'
-import { mkdirSync, writeFileSync, renameSync, existsSync, copyFileSync, readdirSync, statSync, createReadStream } from 'node:fs'
+import { mkdirSync, writeFileSync, renameSync, existsSync, copyFileSync, readdirSync, statSync, createReadStream, readFileSync } from 'node:fs'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import {
   ChannelStore, JobStore, createJob, channelKey, maskChannel, needsKey,
@@ -23,6 +23,15 @@ import { createToolDefs } from './lib/tools.mjs'
 import { createAdapters } from './lib/adapters.mjs'
 
 const MAX_BODY = 2 * 1024 * 1024
+
+/** 插件版本（/plugins/<id>/status 约定用；读 package.json，失败返回 null）。 */
+function pluginVersion() {
+  try {
+    return JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version ?? null
+  } catch {
+    return null
+  }
+}
 
 function sendJson(res, status, json) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' })
@@ -212,6 +221,36 @@ export function apply(ctx, rawConfig = {}) {
   const t2 = ctx.setInterval(resumeStale, 6000)
 
   /* ─────────────── HTTP API ─────────────── */
+
+  /* /plugins/<id>/status —— 2026-08-23 统一约定（与 dsh-dashboards / dsh-scheduler 同构）：
+     工具与看板只读这一个信封，不再各插件自造形状。 */
+  ctx.webServer.register({
+    kind: 'exact',
+    path: '/plugins/dsh-multimedia/status',
+    handler: (_req, res) => {
+      const all = jobs.list({ limit: jobs.cap })
+      const list = channels.list()
+      return sendJson(res, 200, {
+        ok: true,
+        plugin: 'dsh-multimedia',
+        version: pluginVersion(),
+        counts: {
+          channels: list.length,
+          channelsEnabled: list.filter((c) => c.enabled).length,
+          jobs: all.length,
+          active: jobs.activeCount(),
+          inflight: running.size,
+          failed: all.filter((j) => j.status === 'failed').length,
+        },
+        lastError: null,
+        detail: {
+          dataDir,
+          jobsRetained: jobs.cap,
+          withOutputs: all.filter((j) => (j.outputs ?? []).length > 0).length,
+        },
+      })
+    },
+  })
 
   ctx.webServer.register({
     kind: 'prefix',
