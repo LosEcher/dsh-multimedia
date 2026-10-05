@@ -224,7 +224,7 @@ export function apply(ctx, rawConfig = {}) {
 
   /* /plugins/<id>/status —— 2026-08-23 统一约定（与 dsh-dashboards / dsh-scheduler 同构）：
      工具与看板只读这一个信封，不再各插件自造形状。 */
-  ctx.webServer.register({
+  ctx.effect(() => ctx.webServer.register({
     kind: 'exact',
     path: '/plugins/dsh-multimedia/status',
     handler: (_req, res) => {
@@ -250,9 +250,9 @@ export function apply(ctx, rawConfig = {}) {
         },
       })
     },
-  })
+  }), 'dsh-multimedia: route /plugins/dsh-multimedia/status')
 
-  ctx.webServer.register({
+  ctx.effect(() => ctx.webServer.register({
     kind: 'prefix',
     path: '/multimedia',
     handler: async (req, res) => {
@@ -398,7 +398,7 @@ export function apply(ctx, rawConfig = {}) {
         return sendJson(res, 500, { error: e?.message ?? String(e) })
       }
     },
-  })
+  }), 'dsh-multimedia: route /multimedia')
 
   /* ─────────────── agent tools ─────────────── */
 
